@@ -36,9 +36,15 @@ namespace BasicIdentityCustomApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login (LoginRequest loginRequest)
+        public async Task<IActionResult> Login(LoginRequest loginRequest)
         {
+            var loginUserDto = new LoginUserDto()
+            {
+                Email = loginRequest.Email,
+                Password = loginRequest.Password
+            };
 
+            var result = await _userService.LoginUser(loginUserDto)
         }
     }
 }
