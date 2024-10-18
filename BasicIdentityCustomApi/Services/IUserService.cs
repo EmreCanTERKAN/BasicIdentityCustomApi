@@ -7,6 +7,6 @@ namespace BasicIdentityCustomApi.Services
     {
         Task<ServiceMessage> AddUser(AddUserDto user);
 
-        Task<ServiceMessage> LoginUser(LoginUserDto user);
+        Task<ServiceMessage<UserInfoDto>> LoginUser(LoginUserDto user);
     }
 }

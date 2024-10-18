@@ -1,4 +1,6 @@
 ﻿using BasicIdentityCustomApi.Dtos;
+using BasicIdentityCustomApi.Jwt;
+using BasicIdentityCustomApi.Models;
 using BasicIdentityCustomApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using LoginRequest = BasicIdentityCustomApi.Models.LoginRequest;
@@ -17,7 +19,7 @@ namespace BasicIdentityCustomApi.Controllers
         {
             _userService = userService;
         }
-        [HttpPost]
+        [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
             var user =  new AddUserDto()
@@ -35,7 +37,7 @@ namespace BasicIdentityCustomApi.Controllers
 
         }
 
-        [HttpPost]
+        [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest loginRequest)
         {
             var loginUserDto = new LoginUserDto()
@@ -43,8 +45,41 @@ namespace BasicIdentityCustomApi.Controllers
                 Email = loginRequest.Email,
                 Password = loginRequest.Password
             };
+            var result = await _userService.LoginUser(loginUserDto);
 
-            var result = await _userService.LoginUser(loginUserDto)
+            if (!result.IsSucceed)
+            {
+                return BadRequest(result.Message);
+            }
+            var user = result.Data;
+
+            // yalnızca buradan çekmek istediğimiz için properti ile çektik 
+            var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+
+            var token = JwtHelper.GenerateJwtToken(new JwtDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserType = user.UserType,
+                SecretKey = configuration["Jwt:SecretKey"]!,
+                Issuer = configuration["Jwt:Issuer"]!,
+                Audience = configuration["Jwt:Audience"]!,
+                ExpireMinutes = int.Parse(configuration["Jwt:ExpireMinute"]!)
+
+            });
+
+
+            return Ok(new LoginResponse
+            {
+                Message = "Giriş Başarıyla tamamlandı",
+                Token = token
+            });
+
+            
+
         }
+
+       
+
     }
 }
